@@ -8,19 +8,40 @@
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+  let managedObjectContext = PersistenceController.shared.container.viewContext
+  @StateObject var locationManager = LocationManager()
+
+  var body: some View {
+    TabView {
+      AnimalsNearYouView(
+        viewModel: AnimalsNearYouViewModel(
+          animalFetcher: FetchAnimalsService(
+            requestManager:
+              RequestManager()
+          ),
+          animalStore: AnimalStoreService(
+            context: PersistenceController.shared.container.newBackgroundContext()
+          )
+        )
+      )
+      .tabItem {
+        Label("Near you", systemImage: "location")
+      }
+      .environment(\.managedObjectContext, managedObjectContext)
+
+      SearchView()
+        .tabItem {
+          Label("Search", systemImage: "magnifyingglass")
         }
-        .padding()
+        .environment(\.managedObjectContext, managedObjectContext)
     }
+    .environmentObject(locationManager)
+  }
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
+  static var previews: some View {
+    ContentView()
+      .environmentObject(LocationManager())
+  }
 }
